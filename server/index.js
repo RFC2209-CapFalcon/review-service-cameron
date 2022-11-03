@@ -1,7 +1,7 @@
-const service = require('./service.js');
-const db = require('./db');
-const port = 8000;
+const app = require('./service.js');
+// const db = require('./db');
+const PORT = process.env.PORT || 8000;
 
-app.listen(port, () => {
-  console.log(`review-service is listening on ${port}`);
+app.listen(PORT, () => {
+  console.log(`review-service is listening on ${PORT}`);
 });
