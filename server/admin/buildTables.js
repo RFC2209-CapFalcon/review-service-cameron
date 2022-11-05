@@ -8,7 +8,7 @@ const rebuildTables = (db) => {
       review_id serial NOT NULL,
       product_id integer NOT NULL,
       rating integer,
-      date character varying(20),
+      date bigint,
       summary character varying(500),
       body character varying(1000),
       recommend boolean,
