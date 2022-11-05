@@ -15,10 +15,10 @@ const getReviews = async (req, res) => {
     FROM public.reviews r
       LEFT JOIN review_photos rp
       ON r.review_id = rp.review_id
-    WHERE product_id = 66648
+    WHERE product_id = $1
     GROUP BY r.review_id;
   `, [product_id])
-  res.send(product_id)
+  res.send(rows)
 }
 
 const postReview = (req, res) => {
