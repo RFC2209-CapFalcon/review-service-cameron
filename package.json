@@ -8,7 +8,7 @@
     "create-db": "sudo -u jcmontgomery createdb review_service -O cameron",
     "create-tables": "node server/admin/buildTables.js",
     "seed-db": "node server/admin/seedDB.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -35,6 +35,8 @@
   },
   "devDependencies": {
     "express-promise-router": "^4.1.1",
-    "nodemon": "^2.0.20"
+    "jest": "^29.2.2",
+    "nodemon": "^2.0.20",
+    "supertest": "^6.3.1"
   }
 }

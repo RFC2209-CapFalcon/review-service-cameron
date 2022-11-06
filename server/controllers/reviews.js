@@ -1,8 +1,8 @@
 const db = require('../db')
 
-
 // db.query references the query method exported by db/index.js - query(text, params, callback)
 const getReviews = async (req, res) => {
+ // Still need to include pagination either by offset/limit or with ordered keyset
   const { product_id } = req.query
   const { rows } = await db.query(`
     SELECT r.review_id, r.rating, r.summary, r.recommend, r.response, r.body,  TO_TIMESTAMP(r.date / 1000) AS date, r.reviewer_name, r.helpfulness,
@@ -19,10 +19,13 @@ const getReviews = async (req, res) => {
     GROUP BY r.review_id;
   `, [product_id])
   res.send(rows)
+
 }
 
-const postReview = (req, res) => {
-  res.send()
+const postReview = async (req, res) => {
+  const { product_id, rating, summary, body, recommend, name, email, photos, characteristics } = req.body
+  const queryRes = await db.query('', [product_id])
+  res.send(queryRes)
 }
 
 const getCharacteristics = async (req, res) => {
