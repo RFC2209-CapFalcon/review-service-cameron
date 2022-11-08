@@ -17,7 +17,7 @@ mountRoutes(app)
 
 
 app.get('*', (req, res) => {
-  res.status(404).send('Not found')
+  res.status(404).send('Resource not found')
 })
 
 
