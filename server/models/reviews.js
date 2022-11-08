@@ -60,11 +60,60 @@ const postProductReview = async (reviewData) => {
   } catch (err) {
     console.log('Error: Database', err.message);
   }
+}
+
+const getProductMetadata = async (product_id) => {
+  // Get products ratings and recommended
+  let response = await db.query(`
+      SELECT json_build_object(
+        'total', p.total,
+        'reviews', json_build_object(
+          '1', p.one,
+          '2', p.two,
+          '3', p.three,
+          '4', p.four,
+          '5', p.five),
+        'recommend', json_build_object(
+          'True', p.true,
+          'False', p.false)) "rating"
+        FROM (
+          SELECT
+          COUNT(*) AS "total",
+          COUNT(r.rating) FILTER (WHERE r.rating = '1') AS "one",
+          COUNT(r.rating) FILTER (WHERE r.rating = '2') AS "two",
+          COUNT(r.rating) FILTER (WHERE r.rating = '3')  AS "three",
+          COUNT(r.rating) FILTER (WHERE r.rating = '4') AS "four",
+          COUNT(r.rating) FILTER (WHERE r.rating = '5') AS "five",
+          COUNT(r.recommend) FILTER (WHERE r.recommend IS TRUE) AS "true",
+          COUNT(r.recommend) FILTER (WHERE r.recommend IS NOT TRUE) AS "false"
+          FROM reviews r
+          WHERE product_id = $1) AS p;
+    `, [product_id])
+  let ratingsAndRecommended = response.rows
+  ratingsAndRecommended = ratingsAndRecommended[0].rating
 
 
+  let { rows } = await db.query(`
+  SELECT json_build_object(
+      CAST(char_object ->> 'name' AS CHARACTER VARYING), json_build_object(
+        'id', CAST(co.char_object ->> 'id' AS INTEGER),
+        'value', AVG(CAST(co.char_object ->> 'value' AS INTEGER))
+      )
+    ) AS ratingValues
+  FROM (SELECT json_build_object('id', p.characteristic_id, 'name', p.name, 'value', p.value) AS char_object
+    FROM (SELECT cr.characteristic_id, cr.review_id, cr.value, c.name
+        FROM characteristic_reviews cr
+      INNER JOIN characteristics c
+        ON cr.characteristic_id = c.characteristic_id
+      WHERE c.product_id = 88866
+      ORDER BY cr.review_id) AS p) as co
+  GROUP BY CAST((co.char_object ->> 'id') AS INTEGER), CAST((co.char_object ->> 'name') AS CHARACTER VARYING);
+  `)
+  console.log(ratingsAndRecommended, rows)
 }
 
 module.exports = {
   getReviewByProduct,
-  postProductReview
+  postProductReview,
+  getProductMetadata
 }

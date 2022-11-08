@@ -1,4 +1,4 @@
-const { getReviewByProduct, postProductReview} = require('../models/reviews');
+const { getReviewByProduct, postProductReview, getProductMetadata} = require('../models/reviews');
 
 // db.query references the query method exported by db/index.js - query(text, params, callback)
 const getReviews = async (req, res) => {
@@ -28,8 +28,8 @@ const postReview = async (req, res) => {
 }
 
 const getCharacteristics = async (req, res) => {
-  const { product_id } = req.body
-  const queryResponse = await db.query('', [product_id])
+  const { product_id } = req.query
+  const queryResponse = await getProductMetadata(product_id)
   res.send(queryResponse)
 }
 
