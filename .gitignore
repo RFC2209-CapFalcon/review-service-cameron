@@ -6,6 +6,11 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Artillery reports
+artillery/reports
+artillery/reports/html-reports
+
+
 # Compiled Dirs (http://nodejs.org/api/addons.html)
 build/
 bundle.js
