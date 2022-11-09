@@ -1,20 +1,26 @@
 const db = require('../db')
 
-const getReviewByProduct = async (product_id) => {
-  return db.query(`
-    SELECT r.review_id, r.rating, r.summary, r.recommend, r.response, r.body,  TO_TIMESTAMP(r.date / 1000) AS date, r.reviewer_name, r.helpfulness,
-      COALESCE(
-        json_agg(
-          json_build_object(
-            'id', rp.review_photo_id,
-            'url', rp.url
-      )) FILTER (WHERE rp.review_photo_id IS NOT NULL), '[]') AS photos
-    FROM public.reviews r
-      LEFT JOIN review_photos rp
-      ON r.review_id = rp.review_id
-    WHERE product_id = $1
-    GROUP BY r.review_id;
-  `, [product_id])
+const getReviewByProduct = async (product_id, sort) => {
+  try {
+    let response = await db.query(`
+      SELECT r.review_id, r.rating, r.summary, r.recommend, r.response, r.body,  TO_TIMESTAMP(r.date / 1000) AS date, r.reviewer_name, r.helpfulness,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', rp.review_photo_id,
+              'url', rp.url
+        )) FILTER (WHERE rp.review_photo_id IS NOT NULL), '[]') AS photos
+      FROM public.reviews r
+        LEFT JOIN review_photos rp
+        ON r.review_id = rp.review_id
+      WHERE product_id = $1
+      GROUP BY r.review_id;
+    `, [product_id])
+    if (!response.rowCount > 0) return 'No reviews for this product.'
+    return response.rows
+  } catch (err) {
+    console.log('Error: Getting reviews failed', err.message)
+  }
 }
 
 const postProductReview = async (reviewData) => {
@@ -58,62 +64,94 @@ const postProductReview = async (reviewData) => {
       }
     })
   } catch (err) {
-    console.log('Error: Database', err.message);
+    console.log('Error: Posting review failed', err.message);
   }
 }
 
-const getProductMetadata = async (product_id) => {
-  // Get products ratings and recommended
-  let response = await db.query(`
-      SELECT json_build_object(
-        'total', p.total,
-        'reviews', json_build_object(
-          '1', p.one,
-          '2', p.two,
-          '3', p.three,
-          '4', p.four,
-          '5', p.five),
-        'recommend', json_build_object(
-          'True', p.true,
-          'False', p.false)) "rating"
-        FROM (
-          SELECT
-          COUNT(*) AS "total",
-          COUNT(r.rating) FILTER (WHERE r.rating = '1') AS "one",
-          COUNT(r.rating) FILTER (WHERE r.rating = '2') AS "two",
-          COUNT(r.rating) FILTER (WHERE r.rating = '3')  AS "three",
-          COUNT(r.rating) FILTER (WHERE r.rating = '4') AS "four",
-          COUNT(r.rating) FILTER (WHERE r.rating = '5') AS "five",
-          COUNT(r.recommend) FILTER (WHERE r.recommend IS TRUE) AS "true",
-          COUNT(r.recommend) FILTER (WHERE r.recommend IS NOT TRUE) AS "false"
-          FROM reviews r
-          WHERE product_id = $1) AS p;
+const getRatingAndRecommended = async (product_id) => {
+  try {
+    let ratingResponse = await db.query(`
+    SELECT json_build_object(
+          'product_id', $1,
+          'ratings', json_build_object(
+            '1', p.one,
+            '2', p.two,
+            '3', p.three,
+            '4', p.four,
+            '5', p.five),
+          'recommend', json_build_object(
+            'True', p.true,
+            'False', p.false)) AS rating
+    FROM( SELECT
+      COUNT(r.rating) FILTER (WHERE r.rating = '1') AS "one",
+      COUNT(r.rating) FILTER (WHERE r.rating = '2') AS "two",
+      COUNT(r.rating) FILTER (WHERE r.rating = '3')  AS "three",
+      COUNT(r.rating) FILTER (WHERE r.rating = '4') AS "four",
+      COUNT(r.rating) FILTER (WHERE r.rating = '5') AS "five",
+      COUNT(r.recommend) FILTER (WHERE r.recommend IS TRUE) AS "true",
+      COUNT(r.rating) FILTER (WHERE r.recommend IS NOT TRUE) AS "false"
+    FROM reviews r
+    WHERE product_id = $1) AS p;
     `, [product_id])
-  let ratingsAndRecommended = response.rows
-  ratingsAndRecommended = ratingsAndRecommended[0].rating
+    return ratingResponse.rows[0]
+  } catch (err) {
+    console.log('Error: Getting characteristics failed', err.message)
+  }
+}
 
+const getAvgCharacteristics = async (product_id) => {
+  try {
+    let characteristicResponse = await db.query(`
+      SELECT json_build_object(
+          CAST(char_object ->> 'name' AS CHARACTER VARYING), json_build_object(
+            'id', CAST(co.char_object ->> 'id' AS INTEGER),
+            'value', AVG(CAST(co.char_object ->> 'value' AS INTEGER))
+          )
+        ) AS rating_values
+      FROM (SELECT json_build_object('id', p.characteristic_id, 'name', p.name, 'value', p.value) AS char_object
+        FROM (SELECT cr.characteristic_id, cr.review_id, cr.value, c.name
+            FROM characteristic_reviews cr
+          INNER JOIN characteristics c
+            ON cr.characteristic_id = c.characteristic_id
+          WHERE c.product_id = $1
+          ORDER BY cr.review_id) AS p) as co
+      GROUP BY CAST((co.char_object ->> 'id') AS INTEGER), CAST((co.char_object ->> 'name') AS CHARACTER VARYING);
+    `, [product_id]);
+    return characteristicResponse.rows;
+  } catch (err) {
+    console.log('Error: Getting characteristics failed', err.message)
+  }
+}
 
-  let { rows } = await db.query(`
-  SELECT json_build_object(
-      CAST(char_object ->> 'name' AS CHARACTER VARYING), json_build_object(
-        'id', CAST(co.char_object ->> 'id' AS INTEGER),
-        'value', AVG(CAST(co.char_object ->> 'value' AS INTEGER))
-      )
-    ) AS ratingValues
-  FROM (SELECT json_build_object('id', p.characteristic_id, 'name', p.name, 'value', p.value) AS char_object
-    FROM (SELECT cr.characteristic_id, cr.review_id, cr.value, c.name
-        FROM characteristic_reviews cr
-      INNER JOIN characteristics c
-        ON cr.characteristic_id = c.characteristic_id
-      WHERE c.product_id = 88866
-      ORDER BY cr.review_id) AS p) as co
-  GROUP BY CAST((co.char_object ->> 'id') AS INTEGER), CAST((co.char_object ->> 'name') AS CHARACTER VARYING);
-  `)
-  console.log(ratingsAndRecommended, rows)
+const markReviewHelpful = async (review_id) => {
+  try {
+    return await db.query(`
+      UPDATE reviews
+        SET  helpfulness = helpfulness + 1
+      WHERE review_id = $1;
+    `, [review_id])
+  } catch (err) {
+    return err.message
+  }
+}
+
+const reportById = async (review_id) => {
+  try {
+    return await db.query(`
+      UPDATE reviews
+        SET  reported = true
+      WHERE review_id = $1;
+    `, [review_id])
+  } catch (err) {
+    return err.message
+  }
 }
 
 module.exports = {
   getReviewByProduct,
   postProductReview,
-  getProductMetadata
+  getAvgCharacteristics,
+  getRatingAndRecommended,
+  markReviewHelpful,
+  reportById
 }

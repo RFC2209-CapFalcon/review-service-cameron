@@ -1,14 +1,12 @@
-const { getReviewByProduct, postProductReview, getProductMetadata} = require('../models/reviews');
+const { getReviewByProduct, postProductReview, getAvgCharacteristics, getRatingAndRecommended, markReviewHelpful, reportById} = require('../models/reviews');
 
-// db.query references the query method exported by db/index.js - query(text, params, callback)
-const getReviews = async (req, res) => {
+const getProductReviews = async (req, res) => {
   // Still need to include pagination either by offset/limit or with ordered keyset
   try {
-    const { product_id } = req.query;
+    const { product_id, sort } = req.query;
     if (!product_id) return res.status(400).send('Error: invalid product_id provided');
-    const { rows } = await getReviewByProduct(product_id);
-    res.send(rows);
-
+    const response = await getReviewByProduct(product_id, sort);
+    res.send(response);
   } catch (err) {
     res.status(500).send(err);
   }
@@ -18,37 +16,49 @@ const getReviews = async (req, res) => {
 const postReview = async (req, res) => {
   try {
     const reviewData = req.body;
-    if (!reviewData) return res.status(400).send('Error: no review responses');
-
-    const queryResponse = await postProductReview(reviewData);
-    res.send(queryResponse);
+    if (!reviewData) return res.status(400).send(Error('No data in response'));
+    await postProductReview(reviewData);
+    res.sendStatus(201);
   } catch (err) {
     res.sendStatus(500);
   }
 }
 
-const getCharacteristics = async (req, res) => {
+const getAverageProductRatings = async (req, res) => {
   const { product_id } = req.query
-  const queryResponse = await getProductMetadata(product_id)
-  res.send(queryResponse)
+  const ratingsAndRecommended = await getRatingAndRecommended(product_id)
+  const avgCharacteristics = await getAvgCharacteristics(product_id)
+  const ratingsAndCharacteristics = avgCharacteristics.reduce((combined, current) => {
+    return {...combined, ...current.rating_values};
+  }, {...ratingsAndRecommended.rating});
+
+  res.send(ratingsAndCharacteristics)
 }
 
 const markHelpful = async (req, res) => {
-  const { product_id } = req.body
-  const queryRes = await db.query('', [product_id])
-  res.send(queryRes)
+  try {
+    const { review_id } = req.params
+    await markReviewHelpful(review_id)
+    res.sendStatus(204)
+  } catch (err) {
+    res.sendStatus(500)
+  }
 }
 
 const reportReview = async (req, res) => {
-  const { product_id } = req.body
-  const queryRes = await db.query('', [product_id])
-  res.send(queryRes)
+  try {
+    const { review_id } = req.params
+    await reportById(review_id)
+    res.sendStatus(204)
+  } catch (err) {
+    res.sendStatus(500)
+  }
 }
 
 module.exports = {
-  getReviews,
+  getProductReviews,
   postReview,
-  getCharacteristics,
+  getAverageProductRatings,
   markHelpful,
   reportReview
 }
