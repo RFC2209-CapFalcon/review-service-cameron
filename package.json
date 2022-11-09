@@ -8,6 +8,8 @@
     "create-db": "sudo -u jcmontgomery createdb review_service -O cameron",
     "create-tables": "node server/admin/buildTables.js",
     "seed-db": "node server/admin/seedDB.js",
+    "create-indexes": "node server/admin/createIndexes.js",
+    "test-artillery": "artillery run artillery/scripts/loadTestBrowsing.yml",
     "test": "jest"
   },
   "repository": {

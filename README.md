@@ -112,7 +112,7 @@ SELECT PG_GET_SERIAL_SEQUENCE('"Foo"', 'Foo_id');
 ```
 The table name must be in double quotes, surrounded by single quotes.
 
-###Validate, that the sequence is out-of-sync
+### Validate, that the sequence is out-of-sync
 
 ```sql
 SELECT CURRVAL(PG_GET_SERIAL_SEQUENCE('"Foo"', 'Foo_id')) AS "Current Value", MAX("Foo_id") AS "Max Value" FROM "Foo";
@@ -120,22 +120,39 @@ SELECT CURRVAL(PG_GET_SERIAL_SEQUENCE('"Foo"', 'Foo_id')) AS "Current Value", MA
 ```
 When the `Current Value` is less than `Max Value`, your sequence is out-of-sync.
 
-### Correction
+### Correct Sequences
 
 ```sql
 SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"Foo"', 'Foo_id')),
 	(SELECT (MAX("Foo_id") + 1) FROM "Foo"), FALSE);
 
 ```
-### Installing Dependencies
+
+## Creating Table Indexes
+Indexes are neccisary to ensure the system runs properly if indexes are not set expect increased response times of 99.5% and likely system crash at at any scale.
+
+To create dependencies run:
+```
+
+```
+
+## Installing Dependencies
 From within the root directory:
 > 1. Run ```npm install``` to install all required dependencies
 
 
 ## Development
+### Local Testing
 
-Setting up the development environment:
+#### Load Testing with Artillery
+There are test scripts in artillery/scripts which have been written to simulate a realistic user flow interacting with the service. The scripts go through different phases starting with 20 users per second over 1 min, then a ramp up from 20-100 users per second and finally a sustained load phase of 100 users per second for 5 mins.
 
+To run:
+```
+npm run test-artillery
+```
+
+Output will be to the console. You can view artillery.io for more output options
 
 ## Production
 
