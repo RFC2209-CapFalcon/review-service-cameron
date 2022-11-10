@@ -10,7 +10,7 @@ config:
       name: "Medium Volume"
     - duration: 300
       arrivalRate: 100
-      name: "Sustained Load"
+      name: "Sustained Volume"
 
 scenarios:
   - name: "User Flow: Browsing products"
