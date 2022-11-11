@@ -16,7 +16,7 @@ if (process.env.DEV) {
 mountRoutes(app)
 
 // Route for Loader.io Verification
-app.get('/loaderio-d71a4a0b09f4605ceb47e30636f12c67' (req, res) => {
+app.get('/loaderio-d71a4a0b09f4605ceb47e30636f12c67', (req, res) => {
   res.send('loaderio-d71a4a0b09f4605ceb47e30636f12c67')
 })
 
