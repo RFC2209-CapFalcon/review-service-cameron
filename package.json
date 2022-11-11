@@ -4,6 +4,7 @@
   "description": "Part of three total services that provide a web-scale backend to Atelier e-commerce store. Hack Reactor System Design Capstone.",
   "main": "server/index.js",
   "scripts": {
+    "start": "node server",
     "start-dev": "npx nodemon server",
     "create-db": "sudo -u jcmontgomery createdb review_service -O cameron",
     "create-tables": "node server/admin/buildTables.js",
