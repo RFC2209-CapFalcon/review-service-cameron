@@ -120,11 +120,14 @@ SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"Foo"', 'Foo_id')),
 ```
 
 ## Creating Table Indexes
-Indexes are neccisary to ensure the system runs properly if indexes are not set expect increased response times of 99.5% and likely system crash at at any scale.
-
-To create dependencies run:
+Indexes are neccisary to ensure the system runs properly if indexes are not set expect increased response times of 99.5% and likely system crash at at any scale. 
 ```
-
+	 table		  	column
+	-------		       --------
+	reviews		      product_id
+     review_photos            product_id
+ characteristic_reviews	   characteristic_id
+    characteristics           Product_id
 ```
 
 ## Installing Dependencies
