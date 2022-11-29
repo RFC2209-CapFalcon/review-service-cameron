@@ -1,11 +1,4 @@
-# Reviews Service - Software Design Capstone
-
-Group Hack Reactor SDC project.
-
-> ### Group members<br>
-> <br>
-> <br>
->  <br>
+# Atelier Review Service
 
 ## Table of Contents
 
@@ -14,17 +7,15 @@ Group Hack Reactor SDC project.
 3. [Usage](#usage)
 4. [Requirements](#requirements)
 5. [Install and Set-up Postgres](#installation-and-setup-of-postgres)
-5. [Development](#development)
-6. [Production](#production)
-7. [Testing](#testing)
+5. [Development Enviroment](#development)
 
 ## Description
 
-
+Atelier e-commerce site review service. Complete redesign of existing backend after increase in traffic. Scalability, latency, and uptime were primary considerations. Service provides functionality for the product reviewing system consisting of reviews for 100,000+ products. 
 
 ## Technical Overview
 
-
+Service is built with Node.js, Express, and Postgres. Local testing was performed with Jest, Supertest, and Artillery. Service was deployed and integrated using AWS EC2 instances and used NGINX for load balencing and spreading over multiple regions.
 
 ## Usage
 In order to run the project locally please read [Requirements](#requirements) section for instructions setting up a local .env and for installing dependencies. Find further instructions for setting up the project for development or production in the [Development](#development) and [Production](#production) sections.
@@ -153,11 +144,4 @@ npm run test-artillery
 ```
 
 Output will be to the console. You can view artillery.io for more output options
-
-## Production
-
-Creating production build:
-
-
-## Testing
 
